@@ -37,6 +37,7 @@ type Response struct {
 	Overs       string
 	MatchStatus string
 	Runs        string
+	Wickets     string
 }
 
 type ResponseEvent struct {
@@ -89,11 +90,17 @@ func (m *MatchData) Print() {
 	}
 }
 
-func (m *MatchData) convertToResponse() Response {
-	return Response{}
+func (m *MatchStat) convertToResponse(eventType int) ResponseEvent {
+	return ResponseEvent{
+		Response.Overs: m.BattingTeam.Inngs[0].Overs,
+		Response.BtTeamName:m.BattingTeam,
+		Response.Runs:m.BattingTeam.Inngs[0].Run,
+		Response.Wickets:m.BattingTeam.Inngs[0].Wickets,
+		EventType: eventType,
+	}
 }
 
-func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan int) {
+func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan ResponseEvent) {
 	var lastBt *BattingTeam
 	var newBt *BattingTeam
 
@@ -105,7 +112,7 @@ func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan int) {
 		newBt = m.BattingTeam
 	} else {
 		fmt.Println("Match Has not yet Started")
-		event <- EVENT_NO_CHANGE
+		event <- m.convertToResponse(EVENT_NO_CHANGE)
 	}
 
 	if newBt.Inngs != nil && len(newBt.Inngs) > 0 {
@@ -114,29 +121,25 @@ func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan int) {
 		overs, err := strconv.ParseFloat(in.Overs, 32)
 		wkts, err := strconv.Atoi(in.Wickets)
 		if err != nil {
-			event <- EVENT_NO_CHANGE
+			event <- m.convertToResponse(EVENT_NO_CHANGE)
 		}
 		oldRun, _ := strconv.Atoi(lastBt.Inngs[0].Run)
 		oldOvers, _ := strconv.ParseFloat(lastBt.Inngs[0].Overs, 32)
 		oldWkts, _ := strconv.Atoi(lastBt.Inngs[0].Wickets)
 
-		fmt.Println("RUN : ", oldRun, " ", run)
-		fmt.Println("OVER : ", int(oldOvers), " ", int(overs))
-		fmt.Println("WICKETS : ", oldWkts, " ", wkts)
-
 		if oldRun != run {
-			event <- EVENT_RUN_CHANGE
+			event <- m.convertToResponse(EVENT_RUN_CHANGE)
 		}
 		if int(oldOvers) != int(overs) {
-			event <- EVENT_OVER_CHANGED
+			event <- m.convertToResponse(EVENT_OVER_CHANGED)
 		}
 		if oldWkts != wkts {
-			event <- EVENT_OUT
+			event <- m.convertToResponse(EVENT_OUT)
 		}
 	}
 }
 
-func (C *Cricket) Start(teamName string, event chan int) {
+func (c *Cricket) Start() {
 	var temp MatchData
 	var m MatchData
 	go func() {
@@ -149,9 +152,9 @@ func (C *Cricket) Start(teamName string, event chan int) {
 			}
 			for _, k := range m.MatchStats {
 				for _, team := range k.Teams {
-					if strings.Compare(team.Name, teamName) == 0 {
+					if strings.Compare(team.Name, c.teamName) == 0 {
 						if len(temp.MatchStats) > 0 {
-							k.TriggerEvent(temp.MatchStats[0], event)
+							k.TriggerEvent(temp.MatchStats[0], c.event)
 						}
 					}
 				}
