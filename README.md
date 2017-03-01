@@ -1,3 +1,4 @@
+[![GoDoc](https://godoc.org/github.com/go_cricket?status.svg)](https://godoc.org/github.com/go_cricket)
 [![Go Report Card](https://goreportcard.com/badge/github.com/akashshinde/go_cricket)](https://goreportcard.com/report/github.com/akashshinde/go_cricket)
 
 #Usage
