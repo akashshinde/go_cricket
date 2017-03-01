@@ -92,7 +92,7 @@ func (m *MatchData) Print() {
 
 func (m *MatchStat) convertToResponse(eventType int) ResponseEvent {
 	return ResponseEvent{
-		Response{
+		Response: Response{
 			Overs: m.BattingTeam.Inngs[0].Overs,
 			BtTeamName:m.BattingTeam,
 			Runs:m.BattingTeam.Inngs[0].Run,
