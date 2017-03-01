@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/akashshinde/go_cricket)](https://goreportcard.com/report/github.com/akashshinde/go_cricket)
+
 #Usage
 
 ###Import 
