@@ -41,8 +41,8 @@ type Response struct {
 }
 
 type ResponseEvent struct {
-	EventType int
 	Response
+	EventType int
 }
 
 type MatchData struct {
@@ -92,10 +92,12 @@ func (m *MatchData) Print() {
 
 func (m *MatchStat) convertToResponse(eventType int) ResponseEvent {
 	return ResponseEvent{
-		Response.Overs: m.BattingTeam.Inngs[0].Overs,
-		Response.BtTeamName:m.BattingTeam,
-		Response.Runs:m.BattingTeam.Inngs[0].Run,
-		Response.Wickets:m.BattingTeam.Inngs[0].Wickets,
+		Response{
+			Overs: m.BattingTeam.Inngs[0].Overs,
+			BtTeamName:m.BattingTeam,
+			Runs:m.BattingTeam.Inngs[0].Run,
+			Wickets:m.BattingTeam.Inngs[0].Wickets,
+		},
 		EventType: eventType,
 	}
 }
