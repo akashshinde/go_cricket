@@ -2,12 +2,12 @@ package gocricket
 
 import (
 	"encoding/xml"
-	"fmt"
 	"strconv"
 	"io/ioutil"
 	"time"
 	"strings"
 	"net/http"
+	"fmt"
 )
 
 const (
@@ -115,8 +115,6 @@ func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan ResponseE
 		fmt.Println("Match Has not yet Started")
 		event <- m.convertToResponse(EVENT_NO_CHANGE)
 	}
-	fmt.Printf("New Batting Score %+v\n", *newBt)
-	fmt.Printf("Old Batting Score %+v\n", *lastBt)
 	if newBt.Inngs != nil && len(newBt.Inngs) > 0 {
 		inningIndex := len(newBt.Inngs) - 1
 		in := newBt.Inngs[inningIndex]
