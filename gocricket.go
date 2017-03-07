@@ -1,13 +1,13 @@
-package gocricket
+package main
 
 import (
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strconv"
-	"strings"
+	"io/ioutil"
 	"time"
+	"strings"
+	"net/http"
 )
 
 const (
@@ -85,7 +85,6 @@ type Inning struct {
 
 func (m *MatchData) Print() {
 	for _, v := range m.MatchStats {
-		fmt.Println("Type is")
 		fmt.Printf("%+v\n", v)
 	}
 }
@@ -94,7 +93,7 @@ func (m *MatchStat) convertToResponse(eventType int) ResponseEvent {
 	return ResponseEvent{
 		Response: Response{
 			Overs: m.BattingTeam.Inngs[0].Overs,
-			BtTeamName:m.BattingTeam,
+			BtTeamName:m.BattingTeam.Name,
 			Runs:m.BattingTeam.Inngs[0].Run,
 			Wickets:m.BattingTeam.Inngs[0].Wickets,
 		},
@@ -116,26 +115,31 @@ func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan ResponseE
 		fmt.Println("Match Has not yet Started")
 		event <- m.convertToResponse(EVENT_NO_CHANGE)
 	}
-
+	fmt.Printf("New Batting Score %+v\n", *newBt)
+	fmt.Printf("Old Batting Score %+v\n", *lastBt)
 	if newBt.Inngs != nil && len(newBt.Inngs) > 0 {
-		in := newBt.Inngs[0]
+		inningIndex := len(newBt.Inngs) - 1
+		in := newBt.Inngs[inningIndex]
 		run, err := strconv.Atoi(in.Run)
 		overs, err := strconv.ParseFloat(in.Overs, 32)
 		wkts, err := strconv.Atoi(in.Wickets)
 		if err != nil {
 			event <- m.convertToResponse(EVENT_NO_CHANGE)
 		}
-		oldRun, _ := strconv.Atoi(lastBt.Inngs[0].Run)
-		oldOvers, _ := strconv.ParseFloat(lastBt.Inngs[0].Overs, 32)
-		oldWkts, _ := strconv.Atoi(lastBt.Inngs[0].Wickets)
+		oldRun, _ := strconv.Atoi(lastBt.Inngs[inningIndex].Run)
+		oldOvers, _ := strconv.ParseFloat(lastBt.Inngs[inningIndex].Overs, 32)
+		oldWkts, _ := strconv.Atoi(lastBt.Inngs[inningIndex].Wickets)
 
 		if oldRun != run {
+			fmt.Println("Event run change")
 			event <- m.convertToResponse(EVENT_RUN_CHANGE)
 		}
 		if int(oldOvers) != int(overs) {
+			fmt.Println("Event over changed")
 			event <- m.convertToResponse(EVENT_OVER_CHANGED)
 		}
 		if oldWkts != wkts {
+			fmt.Println("Event out")
 			event <- m.convertToResponse(EVENT_OUT)
 		}
 	}
@@ -143,26 +147,33 @@ func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan ResponseE
 
 func (c *Cricket) Start() {
 	var temp MatchData
-	var m MatchData
 	go func() {
 		for {
+			var m MatchData
 			resp, _ := http.Get(CRICBUZZ_URL)
 			data, _ := ioutil.ReadAll(resp.Body)
 			err := xml.Unmarshal(data, &m)
 			if err != nil {
 				fmt.Print("Error is", err)
 			}
-			for _, k := range m.MatchStats {
-				for _, team := range k.Teams {
-					if strings.Compare(team.Name, c.teamName) == 0 {
-						if len(temp.MatchStats) > 0 {
-							k.TriggerEvent(temp.MatchStats[0], c.event)
-						}
-					}
-				}
+			matchStat := c.TeamMatchStat(m)
+			if matchStat.BattingTeam != nil && len(temp.MatchStats) > 0{
+				matchStat.TriggerEvent(c.TeamMatchStat(temp),c.event)
 			}
 			temp = m
 			time.Sleep(time.Second * 10)
 		}
 	}()
+}
+
+func (c *Cricket ) TeamMatchStat(m MatchData) (s MatchStat) {
+	for _, k := range m.MatchStats {
+		for _, team := range k.Teams {
+			if strings.Compare(team.Name, c.teamName) == 0 {
+				s = k
+				return
+			}
+		}
+	}
+	return
 }
