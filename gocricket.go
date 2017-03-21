@@ -112,7 +112,6 @@ func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan ResponseE
 	if m.BattingTeam != nil {
 		newBt = m.BattingTeam
 	} else {
-		fmt.Println("Match Has not yet Started")
 		event <- m.convertToResponse(EVENT_NO_CHANGE)
 	}
 	if newBt.Inngs != nil && len(newBt.Inngs) > 0 {
@@ -129,15 +128,12 @@ func (m *MatchStat) TriggerEvent(lastFetchedStat MatchStat, event chan ResponseE
 		oldWkts, _ := strconv.Atoi(lastBt.Inngs[inningIndex].Wickets)
 
 		if oldRun != run {
-			fmt.Println("Event run change")
 			event <- m.convertToResponse(EVENT_RUN_CHANGE)
 		}
 		if int(oldOvers) != int(overs) {
-			fmt.Println("Event over changed")
 			event <- m.convertToResponse(EVENT_OVER_CHANGED)
 		}
 		if oldWkts != wkts {
-			fmt.Println("Event out")
 			event <- m.convertToResponse(EVENT_OUT)
 		}
 	}
@@ -159,7 +155,7 @@ func (c *Cricket) Start() {
 				matchStat.TriggerEvent(c.TeamMatchStat(temp),c.event)
 			}
 			temp = m
-			time.Sleep(time.Second * 10)
+			time.Sleep(time.Second * 60)
 		}
 	}()
 }
