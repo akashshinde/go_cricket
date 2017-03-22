@@ -1,4 +1,4 @@
-package go_cricket
+package gocricket
 
 import (
 	"encoding/xml"
