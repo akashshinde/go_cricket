@@ -1,4 +1,4 @@
-package main
+package go_cricket
 
 import (
 	"encoding/xml"
@@ -29,12 +29,6 @@ func NewCricketWatcher(teamName string, event chan ResponseEvent) (c *Cricket) {
 	c.teamName = teamName
 	c.event = event
 	return
-}
-
-func main(){
-  ch := make(chan ResponseEvent)
-  c := NewCricketWatcher("Ind",ch)
-  c.Start()
 }
 
 type Response struct {
