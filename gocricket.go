@@ -1,11 +1,10 @@
-package gocricket
+package main
 
 import (
 	"encoding/xml"
 	"strconv"
 	"io/ioutil"
 	"time"
-	"strings"
 	"net/http"
 	"fmt"
 )
@@ -30,6 +29,12 @@ func NewCricketWatcher(teamName string, event chan ResponseEvent) (c *Cricket) {
 	c.teamName = teamName
 	c.event = event
 	return
+}
+
+func main(){
+  ch := make(chan ResponseEvent)
+  c := NewCricketWatcher("Ind",ch)
+  c.Start()
 }
 
 type Response struct {
@@ -163,7 +168,7 @@ func (c *Cricket) Start() {
 func (c *Cricket ) TeamMatchStat(m MatchData) (s MatchStat) {
 	for _, k := range m.MatchStats {
 		for _, team := range k.Teams {
-			if strings.Compare(team.Name, c.teamName) == 0 {
+			if team.Name == c.teamName {
 				s = k
 				return
 			}
